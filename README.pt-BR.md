@@ -77,6 +77,7 @@ Ele acessa os clusters com o seu próprio kubeconfig, então é o RBAC do cluste
   - CPU e memória requisitadas, alocáveis e usadas;
   - problemas ativos e eventos de aviso agrupados.
 - **Tela Clusters:** a saúde e a conexão de todos os clusters cadastrados.
+- **Detalhes do Azure** de um cluster AKS: versões e upgrades, node pools, rede e os endereços livres de cada subnet, janelas de manutenção e configurações de segurança. O Azure é lido com o seu login do Azure CLI, só quando você abre o painel, e nada é gravado.
 - **Workloads:** Pods, Deployments, StatefulSets, DaemonSets, ReplicaSets, Jobs e CronJobs.
 - **Rede:** Services, Ingresses, NetworkPolicies, EndpointSlices e Gateway API.
 - **Armazenamento:** PVCs, PVs e StorageClasses.
@@ -129,6 +130,7 @@ Os scanners vêm no instalador, rodam na sua máquina e não instalam nada nos c
 - **Saúde do cluster**, com Popeye e Polaris.
 - **Central de segurança**, com Trivy (vulnerabilidades de imagens) e KubeLinter.
 - **Assistente de upgrade** para a próxima versão do Kubernetes, com Pluto e Kubeconform. Também pode fazer verificações no Azure: cota, capacidade da subnet, janelas de manutenção e locks.
+- **Otimização de recursos**, só leitura: recursos que parecem sem uso, a capacidade sobrando nos node pools e, quando já existe um Prometheus no seu cluster, requests e limits comparados com o uso observado. O Prometheus é lido pelo API server, e o TKontrol não altera nem exclui nada a partir de uma análise.
 
 </details>
 
@@ -142,6 +144,7 @@ Os scanners vêm no instalador, rodam na sua máquina e não instalam nada nos c
   - lista os objetos abertos por último.
 - Teclado em primeiro lugar: <kbd>g</kbd> + uma letra leva a uma página, <kbd>J</kbd>/<kbd>K</kbd> percorrem as linhas, <kbd>.</kbd> abre as ações da linha, <kbd>?</kbd> lista todos os atalhos.
 - Português (Brasil) e inglês, temas claro e escuro.
+- Um guia do usuário dentro do app, no idioma da interface: menu do usuário → **Guia do usuário**, ou <kbd>Ctrl</kbd>+<kbd>K</kbd> e "Guia do usuário".
 
 </details>
 
@@ -231,7 +234,7 @@ Cada contexto importado é guardado à parte, criptografado. O TKontrol acompanh
 - **Secrets.** Listas, detalhes e YAML nunca recebem os valores dos Secrets. Você pode revelar uma chave por vez, se o RBAC do cluster permitir; ela some de novo depois de 30 segundos. O editor de YAML recusa Secrets. O terminal integrado roda o `kubectl` com o seu RBAC, então mostra o que o `kubectl` mostraria.
 - **Sem telemetria.** Nenhum dado de uso, relatório de falha ou identificador é coletado ou enviado. O TKontrol só se conecta a:
   - os seus clusters;
-  - o Azure Resource Manager e o login da Microsoft, quando você descobre clusters AKS ou faz as verificações do Azure;
+  - o Azure Resource Manager e o login da Microsoft, quando você descobre clusters AKS, abre os Detalhes do Azure ou faz as verificações do Azure;
   - o GitHub Releases, para procurar atualizações, o que pode ser desligado;
   - a base de vulnerabilidades do Trivy e os seus registries de imagens, numa análise da Central de segurança;
   - os schemas do Kubeconform, numa análise do Assistente de upgrade.
