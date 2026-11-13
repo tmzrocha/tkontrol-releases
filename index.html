@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TKontrol: a Kubernetes desktop for AKS in production</title>
+  <meta name="description" content="TKontrol is a Windows desktop app to see, operate and troubleshoot Kubernetes clusters, built around the way teams run AKS. Your kubeconfig, your RBAC, no telemetry.">
+  <meta property="og:title" content="TKontrol">
+  <meta property="og:description" content="A Kubernetes desktop for operating AKS clusters in production. One Platform. Every Cluster. Full Control.">
+  <meta property="og:image" content="https://tmzrocha.github.io/tkontrol-releases/images/overview-dark.png">
+  <meta property="og:url" content="https://tmzrocha.github.io/tkontrol-releases/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://tmzrocha.github.io/tkontrol-releases/">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b5cad'/%3E%3Cpath d='M9 9h14v3.2h-5.4V23h-3.2V12.2H9z' fill='%23fff'/%3E%3Ccircle cx='23' cy='21' r='2.6' fill='%2338bdf8'/%3E%3C/svg%3E">
+  <script>
+    // Language before the first paint: saved choice, else the browser's.
+    (function () {
+      var lang = "en";
+      try { lang = localStorage.getItem("tk-site-lang") || ""; } catch (e) { lang = ""; }
+      if (lang !== "en" && lang !== "pt") lang = /^pt/i.test(navigator.language || "") ? "pt" : "en";
+      document.documentElement.setAttribute("data-lang", lang);
+      document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --bg-alt: #edf2f8;
+      --surface: #ffffff;
+      --text: #0f1b2d;
+      --text-2: #33445c;
+      --muted: #5b6b82;
+      --border: #d9e2ee;
+      --primary: #0b5cad;
+      --primary-hover: #094c8f;
+      --on-primary: #ffffff;
+      --accent: #0284c7;
+      --chip: #e3edf9;
+      --chip-text: #0b4a8b;
+      --code-bg: #0f1b2d;
+      --code-text: #dbe7f7;
+      --good: #1a7f37;
+      --shadow: 0 1px 2px rgba(15, 27, 45, .06), 0 12px 32px -12px rgba(15, 27, 45, .22);
+      --grid: rgba(11, 92, 173, .07);
+      --max: 1160px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --bg-alt: #0f1829;
+        --surface: #121d31;
+        --text: #e6eefb;
+        --text-2: #c3d1e6;
+        --muted: #8fa1bb;
+        --border: #1f2e47;
+        --primary: #3b8ee6;
+        --primary-hover: #5aa2ee;
+        --on-primary: #04111f;
+        --accent: #38bdf8;
+        --chip: #1a2a42;
+        --chip-text: #cfe3ff;
+        --code-bg: #070d18;
+        --code-text: #dbe7f7;
+        --good: #4ac26b;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 16px 40px -16px rgba(0, 0, 0, .7);
+        --grid: rgba(59, 142, 230, .08);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+    :root[data-lang="en"] [data-l="pt"], :root[data-lang="pt"] [data-l="en"] { display: none !important; }
+
+    a { color: var(--primary); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--primary-hover); }
+    code, kbd, pre { font-family: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace; }
+    code { font-size: .9em; background: var(--chip); color: var(--chip-text); padding: .1em .35em; border-radius: 5px; }
+    kbd {
+      display: inline-block; min-width: 1.7em; padding: .05em .45em; text-align: center; font-size: .85em;
+      background: var(--surface); color: var(--text); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 6px;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    section { padding: 88px 0; }
+    section.alt { background: var(--bg-alt); border-block: 1px solid var(--border); }
+    .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+    h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+    h2 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 700; }
+    h3 { font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
+    .lead { font-size: 18px; color: var(--text-2); max-width: 760px; margin: 16px 0 0; }
+    .muted { color: var(--muted); }
+
+    /* Header */
+    header.top {
+      position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .top .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
+    .brand svg { width: 28px; height: 28px; }
+    nav.links { display: flex; gap: 22px; margin-left: auto; }
+    nav.links a { color: var(--text-2); text-decoration: none; font-size: 15px; }
+    nav.links a:hover { color: var(--text); }
+    .lang { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .lang button {
+      font: inherit; font-size: 13px; font-weight: 600; padding: 4px 10px; border: 0; cursor: pointer;
+      background: transparent; color: var(--muted);
+    }
+    .lang button[aria-pressed="true"] { background: var(--chip); color: var(--chip-text); }
+    @media (max-width: 820px) { nav.links { display: none; } .lang { margin-left: auto; } }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 10px;
+      font-weight: 600; font-size: 16px; text-decoration: none; border: 1px solid transparent; transition: background .15s, border-color .15s;
+    }
+    .btn svg { width: 18px; height: 18px; flex: none; }
+    .btn-primary { background: var(--primary); color: var(--on-primary); }
+    .btn-primary:hover { background: var(--primary-hover); color: var(--on-primary); }
+    .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--text); }
+    .btn small { font-weight: 500; opacity: .8; font-size: 13px; }
+
+    /* Hero */
+    .hero {
+      position: relative; padding: 80px 0 0; overflow: hidden;
+      background:
+        radial-gradient(900px 420px at 50% -10%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%),
+        linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 40px 40px,
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 40px 40px;
+    }
+    .hero .wrap { text-align: center; }
+    .pill {
+      display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; align-items: center;
+      padding: 6px 14px; border-radius: 999px; font-size: 13px; color: var(--text-2);
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); display: inline-block; margin-right: 6px; vertical-align: 1px; }
+    .hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -.035em; margin: 22px auto 0; max-width: 900px; }
+    .hero h1 .grad { background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero .lead { margin: 18px auto 0; font-size: clamp(17px, 2vw, 20px); }
+    .cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+    .cta-note { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .shot {
+      margin: 56px auto 0; max-width: 1080px; border-radius: 14px 14px 0 0; overflow: hidden;
+      border: 1px solid var(--border); border-bottom: 0; box-shadow: var(--shadow); background: var(--surface);
+    }
+    .shot .bar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .shot .bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+
+    /* Facts strip */
+    .facts { border-bottom: 1px solid var(--border); background: var(--surface); }
+    .facts ul { list-style: none; margin: 0; padding: 22px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .facts li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--text-2); }
+    .facts b { display: block; color: var(--text); font-size: 15px; }
+    .facts svg { width: 22px; height: 22px; color: var(--primary); flex: none; margin-top: 2px; }
+    @media (max-width: 900px) { .facts ul { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .facts ul { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .grid { display: grid; gap: 18px; margin-top: 44px; }
+    .grid.c3 { grid-template-columns: repeat(3, 1fr); }
+    .grid.c2 { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 960px) { .grid.c3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .grid.c3, .grid.c2 { grid-template-columns: 1fr; } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    .card .ico {
+      width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 16px;
+      background: var(--chip); color: var(--primary);
+    }
+    .card .ico svg { width: 22px; height: 22px; }
+    .card p { margin: 8px 0 0; color: var(--text-2); font-size: 15px; }
+    .card ul { margin: 12px 0 0; padding-left: 18px; color: var(--text-2); font-size: 15px; }
+    .card li + li { margin-top: 6px; }
+
+    /* Features */
+    .feature-groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 44px; }
+    .feature-groups .card.wide { grid-column: 1 / -1; }
+    @media (max-width: 760px) { .feature-groups { grid-template-columns: 1fr; } }
+    .feature-groups h3 { display: flex; align-items: center; gap: 10px; }
+    .feature-groups h3 svg { width: 20px; height: 20px; color: var(--primary); }
+
+    /* Gallery */
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 44px; }
+    @media (max-width: 760px) { .gallery { grid-template-columns: 1fr; } }
+    figure { margin: 0; }
+    figure img { border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface); }
+    figcaption { margin-top: 12px; font-size: 15px; color: var(--text-2); }
+    .note { margin-top: 22px; font-size: 13px; color: var(--muted); }
+
+    /* Security */
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    @media (max-width: 860px) { .two { grid-template-columns: 1fr; gap: 32px; } }
+    .two > *, .grid > *, .feature-groups > *, .gallery > * { min-width: 0; }
+    td code { overflow-wrap: anywhere; }
+    .checks { list-style: none; margin: 28px 0 0; padding: 0; }
+    .checks li { position: relative; padding-left: 32px; color: var(--text-2); }
+    .checks li + li { margin-top: 14px; }
+    .checks li::before {
+      content: ""; position: absolute; left: 0; top: 3px; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--chip) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232a78d6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 12px no-repeat;
+    }
+    .checks b { color: var(--text); }
+
+    /* Install */
+    .steps { counter-reset: s; list-style: none; padding: 0; margin: 32px 0 0; }
+    .steps li { counter-increment: s; position: relative; padding: 0 0 22px 52px; color: var(--text-2); }
+    .steps li::before {
+      content: counter(s); position: absolute; left: 0; top: -2px; width: 34px; height: 34px; border-radius: 50%;
+      display: grid; place-items: center; font-weight: 700; background: var(--primary); color: var(--on-primary);
+    }
+    .steps b { color: var(--text); }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 12px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+    .table-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+    .table-scroll table { margin: 0; }
+    .table-scroll tr:last-child td { border-bottom: 0; }
+    pre {
+      margin: 14px 0 0; padding: 16px 18px; border-radius: 12px; overflow-x: auto;
+      background: var(--code-bg); color: var(--code-text); font-size: 14px; line-height: 1.5;
+    }
+    pre .c { color: #7f93b0; }
+    .req { margin: 14px 0 0; padding-left: 18px; color: var(--text-2); }
+    .req li + li { margin-top: 6px; }
+
+    /* Shortcuts */
+    .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 28px; margin-top: 36px; }
+    @media (max-width: 860px) { .keys { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .keys { grid-template-columns: 1fr; } }
+    .keys div { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 15px; color: var(--text-2); }
+    .keys span:first-child { white-space: nowrap; }
+
+    /* FAQ */
+    .faq { margin-top: 36px; max-width: 860px; }
+    details { border-bottom: 1px solid var(--border); }
+    summary {
+      cursor: pointer; list-style: none; padding: 18px 36px 18px 0; position: relative; font-weight: 600; font-size: 17px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "+"; position: absolute; right: 6px; top: 14px; font-size: 22px; font-weight: 400; color: var(--muted); transition: transform .15s;
+    }
+    details[open] summary::after { transform: rotate(45deg); }
+    details p { margin: 0 0 18px; color: var(--text-2); }
+
+    /* Closing CTA and footer */
+    .closing { text-align: center; }
+    .closing .lead { margin-left: auto; margin-right: auto; }
+    footer { border-top: 1px solid var(--border); padding: 36px 0 48px; font-size: 14px; color: var(--muted); }
+    footer .row { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; }
+    footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
+    footer nav a { color: var(--text-2); text-decoration: none; }
+    footer nav a:hover { color: var(--text); text-decoration: underline; }
+    footer p { margin: 18px 0 0; max-width: 820px; }
+
+    @media (max-width: 640px) {
+      section { padding: 64px 0; }
+      .wrap { padding: 0 16px; }
+      .hero { padding-top: 56px; }
+      .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Icon sprite (stroke icons, 24×24) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></symbol>
+      <symbol id="i-windows" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5l7.5-1v7H3zM11.5 4.4L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.4z"/></symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.6 11 4 4 0 0 1 17.5 19z"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+      <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+      <symbol id="i-github" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.7 9.7 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="TKontrol">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0b5cad"/><path d="M9 9h14v3.2h-5.4V23h-3.2V12.2H9z" fill="#fff"/><circle cx="23" cy="21" r="2.6" fill="#38bdf8"/></svg>
+        TKontrol
+      </a>
+      <nav class="links" aria-label="Page">
+        <a href="#features"><span data-l="en">Features</span><span data-l="pt">Recursos</span></a>
+        <a href="#security"><span data-l="en">Security</span><span data-l="pt">Segurança</span></a>
+        <a href="#install"><span data-l="en">Install</span><span data-l="pt">Instalar</span></a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/tmzrocha/tkontrol-releases/releases">Releases</a>
+      </nav>
+      <div class="lang" role="group" aria-label="Language / Idioma">
+        <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="pt" aria-pressed="false">PT</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="wrap">
+        <span class="pill">
+          <span><span class="dot" aria-hidden="true"></span><span data-l="en">Windows desktop app</span><span data-l="pt">App desktop para Windows</span></span>
+          <span class="js-version">v0.22.2</span>
+          <span data-l="en">No telemetry</span><span data-l="pt">Sem telemetria</span>
+        </span>
+        <h1>One Platform. Every Cluster. <span class="grad">Full Control.</span></h1>
+        <p class="lead">
+          <span data-l="en">A Kubernetes desktop for operating AKS clusters in production. See, operate and troubleshoot your clusters with your own kubeconfig. Your cluster's RBAC decides what you can see and do.</span>
+          <span data-l="pt">Um desktop Kubernetes para operar clusters AKS em produção. Veja, opere e diagnostique os seus clusters com o seu próprio kubeconfig, e o RBAC do cluster decide o que você vê e faz.</span>
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary js-download" href="https://github.com/tmzrocha/tkontrol-releases/releases/latest">
+            <svg aria-hidden="true"><use href="#i-windows"/></svg>
+            <span><span data-l="en">Download for Windows</span><span data-l="pt">Baixar para Windows</span></span>
+          </a>
+          <a class="btn btn-ghost" href="#features">
+            <span data-l="en">See what's inside</span><span data-l="pt">Veja o que ele faz</span>
+          </a>
+        </div>
+        <p class="cta-note">
+          <span data-l="en">Windows 10 or 11, 64-bit · installs for your user, no administrator rights · updates itself</span>
+          <span data-l="pt">Windows 10 ou 11, 64 bits · instala para o seu usuário, sem administrador · atualiza-se sozinho</span>
+        </p>
+        <div class="shot">
+          <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="images/overview-dark.png">
+            <img src="images/overview-light.png" width="1440" height="900"
+                 alt="TKontrol showing the overview of a cluster: health, nodes, Pods with problems, Deployments and resource usage"
+                 data-alt-pt="O TKontrol mostrando a visão geral de um cluster: saúde, nodes, Pods com problema, Deployments e uso de recursos">
+          </picture>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facts -->
+    <div class="facts">
+      <div class="wrap">
+        <ul>
+          <li><svg aria-hidden="true"><use href="#i-cloud"/></svg><span><b><span data-l="en">AKS first</span><span data-l="pt">Feito para o AKS</span></b><span data-l="en">Entra ID via kubelogin, Linux and Windows node pools.</span><span data-l="pt">Entra ID pelo kubelogin, node pools Linux e Windows.</span></span></li>
+          <li><svg aria-hidden="true"><use href="#i-shield"/></svg><span><b><span data-l="en">Your RBAC, nothing more</span><span data-l="pt">O seu RBAC, nada além</span></b><span data-l="en">No privilege elevation, no agent in your clusters.</span><span data-l="pt">Sem elevar privilégios, sem agente nos clusters.</span></span></li>
+          <li><svg aria-hidden="true"><use href="#i-lock"/></svg><span><b><span data-l="en">Private</span><span data-l="pt">Privado</span></b><span data-l="en">No telemetry. Credentials encrypted at rest.</span><span data-l="pt">Sem telemetria. Credenciais criptografadas.</span></span></li>
+          <li><svg aria-hidden="true"><use href="#i-windows"/></svg><span><b><span data-l="en">English and Portuguese</span><span data-l="pt">Inglês e português</span></b><span data-l="en">Light and dark themes, user guide inside the app.</span><span data-l="pt">Temas claro e escuro, guia do usuário no app.</span></span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Highlights -->
+    <section id="highlights">
+      <div class="wrap">
+        <p class="eyebrow"><span data-l="en">Why TKontrol</span><span data-l="pt">Por que o TKontrol</span></p>
+        <h2><span data-l="en">Built for clusters where a wrong click is expensive</span><span data-l="pt">Pensado para clusters onde um clique errado custa caro</span></h2>
+        <div class="grid c3">
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-cloud"/></svg></div>
+            <h3><span data-l="en">Made for AKS</span><span data-l="pt">Feito para o AKS</span></h3>
+            <p data-l="en">Finds kubelogin and the Azure CLI even outside <code>PATH</code>, discovers the AKS clusters of your subscription and explains a failed sign-in by its cause: no <code>az login</code>, expired login, Conditional Access or a missing tool.</p>
+            <p data-l="pt">Encontra o kubelogin e o Azure CLI mesmo fora do <code>PATH</code>, descobre os clusters AKS da sua assinatura e explica um login que falha pela causa: sem <code>az login</code>, login expirado, Acesso Condicional ou ferramenta ausente.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-shield"/></svg></div>
+            <h3><span data-l="en">Careful in production</span><span data-l="pt">Cuidadoso em produção</span></h3>
+            <p data-l="en">Operations check your RBAC permission first and can be simulated on the server (dry run). Deletes, drains and any change on a production cluster ask for confirmation in a second step, with a PRD badge.</p>
+            <p data-l="pt">As operações conferem primeiro a sua permissão no RBAC e podem ser simuladas no servidor (dry run). Excluir, drenar e qualquer alteração num cluster de produção pedem confirmação numa segunda etapa, com o selo PRD.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-terminal"/></svg></div>
+            <h3><span data-l="en">A terminal with rules</span><span data-l="pt">Um terminal com regras</span></h3>
+            <p data-l="en">The integrated <code>kubectl</code> is bound to the selected cluster. On a production cluster, a command that may change it runs only after you type the cluster's name. Every command is audited.</p>
+            <p data-l="pt">O <code>kubectl</code> integrado fica preso ao cluster selecionado. Num cluster de produção, um comando que pode alterá-lo só roda depois de você digitar o nome do cluster. Todo comando é auditado.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></div>
+            <h3><span data-l="en">Honest data</span><span data-l="pt">Dados honestos</span></h3>
+            <p data-l="en">A count that could not be read shows as "not read", not as zero. Without the Metrics API, TKontrol says usage is unavailable instead of making up numbers.</p>
+            <p data-l="pt">Uma contagem que não pôde ser lida aparece como "não lido", e não como zero. Sem a Metrics API, o TKontrol diz que o uso está indisponível, em vez de inventar números.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-zap"/></svg></div>
+            <h3><span data-l="en">Fast on large clusters</span><span data-l="pt">Rápido em clusters grandes</span></h3>
+            <p data-l="en">When your permissions allow watching the cluster, a watch cache keeps the lists live without polling, and the global search reads names from it.</p>
+            <p data-l="pt">Quando as suas permissões deixam acompanhar o cluster (watch), um cache mantém as listas ao vivo sem consultas repetidas, e a busca global lê os nomes dele.</p>
+          </article>
+          <article class="card">
+            <div class="ico"><svg aria-hidden="true"><use href="#i-lock"/></svg></div>
+            <h3><span data-l="en">Read-only when you need it</span><span data-l="pt">Somente leitura quando precisar</span></h3>
+            <p data-l="en">Mark a cluster read-only in TKontrol and the backend refuses every change to it, the terminal included. Actions and file copies go to a local audit log.</p>
+            <p data-l="pt">Marque um cluster como somente leitura no TKontrol e o backend recusa qualquer alteração nele, inclusive pelo terminal. Ações e cópias de arquivos vão para um log de auditoria local.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="alt">
+      <div class="wrap">
+        <p class="eyebrow"><span data-l="en">Features</span><span data-l="pt">Recursos</span></p>
+        <h2><span data-l="en">From the first look to the root cause</span><span data-l="pt">Do primeiro olhar à causa provável</span></h2>
+        <div class="feature-groups">
+          <article class="card">
+            <h3><svg aria-hidden="true"><use href="#i-eye"/></svg><span data-l="en">See</span><span data-l="pt">Ver</span></h3>
+            <ul data-l="en">
+              <li>Cluster overview with health from documented rules, Pods with problems and CPU/memory requested, allocatable and used.</li>
+              <li>Azure details of an AKS cluster: versions, node pools, free subnet addresses, maintenance windows.</li>
+              <li>Workloads, networking (Gateway API included), storage, configuration and access control.</li>
+              <li>Live lists with a side panel, saved views and filters you can share as a link.</li>
+              <li>Relations map, Timeline of events and changes, and compare an object across clusters.</li>
+            </ul>
+            <ul data-l="pt">
+              <li>Visão geral do cluster com saúde por regras documentadas, Pods com problema e CPU/memória pedidos, alocáveis e usados.</li>
+              <li>Detalhes do Azure de um cluster AKS: versões, node pools, endereços livres das subnets, janelas de manutenção.</li>
+              <li>Workloads, rede (com a Gateway API), armazenamento, configuração e controle de acesso.</li>
+              <li>Listas ao vivo com painel lateral, visões salvas e filtros que você compartilha como link.</li>
+              <li>Mapa de relações, Timeline de eventos e mudanças, e comparação de um objeto entre clusters.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3><svg aria-hidden="true"><use href="#i-sliders"/></svg><span data-l="en">Operate, with guard rails</span><span data-l="pt">Operar, com proteções</span></h3>
+            <ul data-l="en">
+              <li>Scale, restart and roll back to a chosen revision.</li>
+              <li>Delete, cordon, uncordon and drain, with a plan that respects PDBs.</li>
+              <li>Run a CronJob now, edit YAML with a diff, create objects from YAML.</li>
+              <li>Restart and scale several workloads at once.</li>
+              <li>See the equivalent <code>kubectl</code> command before you apply an action on one object.</li>
+            </ul>
+            <ul data-l="pt">
+              <li>Escalar, reiniciar e voltar para uma revisão escolhida.</li>
+              <li>Excluir, cordon, uncordon e drenar, com um plano que respeita os PDBs.</li>
+              <li>Rodar um CronJob agora, editar YAML com diff, criar objetos a partir de YAML.</li>
+              <li>Reiniciar e escalar vários workloads de uma vez.</li>
+              <li>Ver o comando <code>kubectl</code> equivalente antes de aplicar uma ação num objeto.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3><svg aria-hidden="true"><use href="#i-terminal"/></svg><span data-l="en">Troubleshoot</span><span data-l="pt">Diagnosticar</span></h3>
+            <ul data-l="en">
+              <li>Streaming logs with pause, filter and previous container; merged logs of a workload.</li>
+              <li>Pod shell (Linux and Windows), port forwarding and file copy to and from a container.</li>
+              <li>Debug a Pod with an ephemeral container (busybox, netshoot or your own registry).</li>
+              <li>Diagnosis with the probable cause and the evidence for Pods, Deployments, nodes, Services and PVCs.</li>
+              <li>Packet capture: tcpdump on Linux (PCAP), <code>netsh trace</code> on Windows nodes (ETL).</li>
+            </ul>
+            <ul data-l="pt">
+              <li>Logs ao vivo com pausa, filtro e container anterior; logs juntos de um workload.</li>
+              <li>Shell do Pod (Linux e Windows), port-forward e cópia de arquivos de e para o container.</li>
+              <li>Depurar um Pod com um container efêmero (busybox, netshoot ou o seu próprio registry).</li>
+              <li>Diagnóstico com a causa provável e as evidências para Pods, Deployments, nodes, Services e PVCs.</li>
+              <li>Captura de pacotes: tcpdump no Linux (PCAP), <code>netsh trace</code> em nodes Windows (ETL).</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3><svg aria-hidden="true"><use href="#i-chart"/></svg><span data-l="en">Analyze</span><span data-l="pt">Analisar</span></h3>
+            <ul data-l="en">
+              <li><b>Cluster Health</b> with Popeye and Polaris.</li>
+              <li><b>Security Center</b> with Trivy and KubeLinter.</li>
+              <li><b>Upgrade Advisor</b> with Pluto and Kubeconform, plus Azure checks: quota, subnet capacity, maintenance windows and locks.</li>
+              <li><b>Resource Optimization</b>, read only: unused resources, node pool spare capacity and requests against observed usage.</li>
+              <li>The scanners ship inside the installer, run on your machine and install nothing in your clusters.</li>
+            </ul>
+            <ul data-l="pt">
+              <li><b>Cluster Health</b> com Popeye e Polaris.</li>
+              <li><b>Security Center</b> com Trivy e KubeLinter.</li>
+              <li><b>Upgrade Advisor</b> com Pluto e Kubeconform, mais verificações do Azure: cota, capacidade das subnets, janelas de manutenção e locks.</li>
+              <li><b>Resource Optimization</b>, só leitura: recursos sem uso, folga dos node pools e requests contra o uso observado.</li>
+              <li>Os scanners vêm no instalador, rodam na sua máquina e não instalam nada nos clusters.</li>
+            </ul>
+          </article>
+          <article class="card wide">
+            <h3><svg aria-hidden="true"><use href="#i-layers"/></svg><span data-l="en">Several clusters, search and keyboard</span><span data-l="pt">Vários clusters, busca e teclado</span></h3>
+            <ul data-l="en">
+              <li>Switch clusters from the header, or open a cluster in a window of its own.</li>
+              <li>Global search (<kbd>Ctrl</kbd>+<kbd>K</kbd>) finds pages and objects of 12 kinds, and acts on them: open, YAML, logs, terminal, copy <code>kubectl get</code>.</li>
+              <li>Keyboard first: <kbd>g</kbd> + a letter goes to a page, <kbd>J</kbd>/<kbd>K</kbd> move through rows, <kbd>.</kbd> opens a row's actions, <kbd>?</kbd> lists every shortcut.</li>
+            </ul>
+            <ul data-l="pt">
+              <li>Troque de cluster pelo cabeçalho ou abra um cluster numa janela própria.</li>
+              <li>A busca global (<kbd>Ctrl</kbd>+<kbd>K</kbd>) encontra páginas e objetos de 12 tipos e age sobre eles: abrir, YAML, logs, terminal, copiar <code>kubectl get</code>.</li>
+              <li>Teclado primeiro: <kbd>g</kbd> + uma letra vai a uma página, <kbd>J</kbd>/<kbd>K</kbd> andam pelas linhas, <kbd>.</kbd> abre as ações da linha, <kbd>?</kbd> lista todos os atalhos.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="screens">
+      <div class="wrap">
+        <p class="eyebrow"><span data-l="en">Screens</span><span data-l="pt">Telas</span></p>
+        <h2><span data-l="en">Everything one click away from the object</span><span data-l="pt">Tudo a um clique do objeto</span></h2>
+        <div class="gallery">
+          <figure>
+            <img src="images/pods.png" loading="lazy" width="1440" height="900" alt="The Pods list with the side panel open on a Pod" data-alt-pt="A lista de Pods com o painel lateral aberto num Pod">
+            <figcaption><span data-l="en">Live lists, with a side panel to inspect an object.</span><span data-l="pt">Listas ao vivo, com painel lateral para examinar um objeto.</span></figcaption>
+          </figure>
+          <figure>
+            <img src="images/compare.png" loading="lazy" width="1440" height="900" alt="Two Deployments compared side by side" data-alt-pt="Dois Deployments comparados lado a lado">
+            <figcaption><span data-l="en">Compare an object with another, in this cluster or another.</span><span data-l="pt">Compare um objeto com outro, neste cluster ou em outro.</span></figcaption>
+          </figure>
+          <figure>
+            <img src="images/search.png" loading="lazy" width="1440" height="900" alt="The global search showing Pods, a StatefulSet and a PVC" data-alt-pt="A busca global mostrando Pods, um StatefulSet e um PVC">
+            <figcaption><span data-l="en">Search objects of 12 kinds and act on them.</span><span data-l="pt">Busque objetos de 12 tipos e aja sobre eles.</span></figcaption>
+          </figure>
+          <figure>
+            <img src="images/pod.png" loading="lazy" width="1440" height="1080" alt="A Pod's page with links to its ServiceAccount and volumes" data-alt-pt="A página de um Pod com links para a ServiceAccount e os volumes">
+            <figcaption><span data-l="en">Object pages link to what the object uses.</span><span data-l="pt">As páginas de objeto levam ao que o objeto usa.</span></figcaption>
+          </figure>
+        </div>
+        <p class="note"><span data-l="en">The screenshots use Demo Mode, with simulated data.</span><span data-l="pt">As capturas usam o Modo Demo, com dados simulados, e a interface em inglês.</span></p>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section id="security" class="alt">
+      <div class="wrap two">
+        <div>
+          <p class="eyebrow"><span data-l="en">Security and privacy</span><span data-l="pt">Segurança e privacidade</span></p>
+          <h2><span data-l="en">Your credentials stay on your machine</span><span data-l="pt">As suas credenciais ficam na sua máquina</span></h2>
+          <ul class="checks">
+            <li data-l="en"><b>No privilege elevation.</b> Every call to a cluster uses the credentials of the imported context; TKontrol has no administrative identity of its own.</li>
+            <li data-l="pt"><b>Sem elevação de privilégio.</b> Toda chamada a um cluster usa as credenciais do contexto importado; o TKontrol não tem identidade administrativa própria.</li>
+            <li data-l="en"><b>Encrypted at rest.</b> Credentials use AES-256-GCM and are never shown again or written to logs.</li>
+            <li data-l="pt"><b>Criptografadas.</b> As credenciais usam AES-256-GCM e nunca são mostradas de novo nem gravadas em logs.</li>
+            <li data-l="en"><b>Local only.</b> The backend listens on a random port of <code>127.0.0.1</code>, protected by a session token created at each start.</li>
+            <li data-l="pt"><b>Só local.</b> O backend escuta numa porta aleatória de <code>127.0.0.1</code>, protegido por um token de sessão criado a cada abertura.</li>
+            <li data-l="en"><b>Secrets stay hidden.</b> Lists, details and YAML never receive Secret values. You can reveal one key at a time, if RBAC allows; it hides again after 30 seconds.</li>
+            <li data-l="pt"><b>Secrets ficam ocultos.</b> Listas, detalhes e YAML nunca recebem os valores dos Secrets. Você pode revelar uma chave por vez, se o RBAC permitir; ela some de novo depois de 30 segundos.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span data-l="en">No telemetry. TKontrol only connects to:</span><span data-l="pt">Sem telemetria. O TKontrol só se conecta a:</span></h3>
+          <ul data-l="en">
+            <li>your clusters;</li>
+            <li>Azure Resource Manager and Microsoft sign-in, when you discover AKS clusters, open the Azure details or run the Azure checks;</li>
+            <li>GitHub Releases, for the update check, which you can turn off;</li>
+            <li>the Trivy vulnerability database and your image registries, in a Security Center scan;</li>
+            <li>the Kubeconform schemas, in an Upgrade Advisor scan.</li>
+          </ul>
+          <ul data-l="pt">
+            <li>os seus clusters;</li>
+            <li>o Azure Resource Manager e o login da Microsoft, quando você descobre clusters AKS, abre os Detalhes do Azure ou faz as verificações do Azure;</li>
+            <li>o GitHub Releases, para procurar atualizações, o que pode ser desligado;</li>
+            <li>a base de vulnerabilidades do Trivy e os seus registries de imagens, numa análise do Security Center;</li>
+            <li>os schemas do Kubeconform, numa análise do Upgrade Advisor.</li>
+          </ul>
+          <p data-l="en">No usage data, crash report or identifier is collected or sent. Updates are only installed after you confirm, and only when signed with the project's updater key.</p>
+          <p data-l="pt">Nenhum dado de uso, relatório de falha ou identificador é coletado ou enviado. Uma atualização só é instalada depois que você confirma, e só se estiver assinada com a chave do atualizador do projeto.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install">
+      <div class="wrap two">
+        <div>
+          <p class="eyebrow"><span data-l="en">Download and install</span><span data-l="pt">Baixar e instalar</span></p>
+          <h2><span data-l="en">Up and running in a few minutes</span><span data-l="pt">Funcionando em poucos minutos</span></h2>
+          <ol class="steps">
+            <li data-l="en">Download the installer from the <a class="js-latest" href="https://github.com/tmzrocha/tkontrol-releases/releases/latest">latest release</a>.</li>
+            <li data-l="pt">Baixe o instalador da <a class="js-latest" href="https://github.com/tmzrocha/tkontrol-releases/releases/latest">última versão</a>.</li>
+            <li data-l="en">Run it. The installers are not Authenticode-signed yet, so SmartScreen may say "Windows protected your PC": choose <b>More info → Run anyway</b>.</li>
+            <li data-l="pt">Execute. Os instaladores ainda não têm assinatura Authenticode, então o SmartScreen pode dizer "O Windows protegeu o computador": escolha <b>Mais informações → Executar assim mesmo</b>.</li>
+            <li data-l="en">Open TKontrol. To look around without a cluster, choose <b>Explore Demo Mode</b> in the tray icon menu.</li>
+            <li data-l="pt">Abra o TKontrol. Para conhecer sem um cluster, escolha <b>Explore Demo Mode</b> no menu do ícone da bandeja.</li>
+            <li data-l="en">On the <b>Clusters</b> page, choose <b>Import kubeconfig</b>: pick contexts from <code>~/.kube/config</code>, paste a kubeconfig or import the AKS clusters of your subscription.</li>
+            <li data-l="pt">Na tela <b>Clusters</b>, escolha <b>Importar kubeconfig</b>: escolha contextos do <code>~/.kube/config</code>, cole um kubeconfig ou importe os clusters AKS da sua assinatura.</li>
+          </ol>
+        </div>
+        <div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th><span data-l="en">File</span><span data-l="pt">Arquivo</span></th><th><span data-l="en">When to use it</span><span data-l="pt">Quando usar</span></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>TKontrol_<span class="js-ver">&lt;version&gt;</span>_x64-setup.exe</code></td>
+                  <td><span data-l="en"><b>Recommended.</b> Installs for your user, needs no administrator rights and updates itself.</span><span data-l="pt"><b>Recomendado.</b> Instala para o seu usuário, não pede administrador e se atualiza pelo app.</span></td>
+                </tr>
+                <tr>
+                  <td><code>TKontrol_<span class="js-ver">&lt;version&gt;</span>_x64_en-US.msi</code></td>
+                  <td><span data-l="en">For distribution by IT (Intune, Group Policy).</span><span data-l="pt">Para distribuição pela TI (Intune, Política de Grupo).</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3 style="margin-top:28px"><span data-l="en">Verify the download</span><span data-l="pt">Conferir o download</span></h3>
+          <p class="muted" style="margin:6px 0 0"><span data-l="en">Compare the hash with the line of that file in <code>SHA256SUMS.txt</code>. Each release also ships a CycloneDX SBOM (<code>sbom.cdx.json</code>).</span><span data-l="pt">Compare o hash com a linha do arquivo em <code>SHA256SUMS.txt</code>. Cada versão também traz um SBOM CycloneDX (<code>sbom.cdx.json</code>).</span></p>
+          <pre><span class="c"># PowerShell</span>
+Get-FileHash .\TKontrol_<span class="js-ver">&lt;version&gt;</span>_x64-setup.exe -Algorithm SHA256</pre>
+          <h3 style="margin-top:28px"><span data-l="en">Requirements</span><span data-l="pt">Requisitos</span></h3>
+          <ul class="req" data-l="en">
+            <li>Windows 10 or 11, 64-bit (tested on Windows 11). WebView2 is downloaded on Windows 10 if missing.</li>
+            <li>A kubeconfig with access to your clusters.</li>
+            <li>For AKS with Microsoft Entra ID: the Azure CLI and kubelogin.</li>
+            <li>Optional: the Metrics API (metrics-server), for usage numbers.</li>
+          </ul>
+          <ul class="req" data-l="pt">
+            <li>Windows 10 ou 11, 64 bits (testado no Windows 11). No Windows 10, o WebView2 é baixado se faltar.</li>
+            <li>Um kubeconfig com acesso aos seus clusters.</li>
+            <li>Para AKS com Microsoft Entra ID: o Azure CLI e o kubelogin.</li>
+            <li>Opcional: a Metrics API (metrics-server), para os números de uso.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shortcuts -->
+    <section id="shortcuts" class="alt">
+      <div class="wrap">
+        <p class="eyebrow"><span data-l="en">Keyboard</span><span data-l="pt">Teclado</span></p>
+        <h2><span data-l="en">Keep your hands on the keyboard</span><span data-l="pt">Mãos no teclado</span></h2>
+        <div class="keys">
+          <div><span><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span><span data-l="en">Global search</span><span data-l="pt">Busca global</span></span></div>
+          <div><span><kbd>?</kbd></span><span><span data-l="en">All shortcuts</span><span data-l="pt">Todos os atalhos</span></span></div>
+          <div><span><kbd>g</kbd> + <span data-l="en">letter</span><span data-l="pt">letra</span></span><span><span data-l="en">Go to a page</span><span data-l="pt">Ir para uma página</span></span></div>
+          <div><span><kbd>/</kbd></span><span><span data-l="en">Filter the list</span><span data-l="pt">Filtrar a lista</span></span></div>
+          <div><span><kbd>J</kbd> / <kbd>K</kbd></span><span><span data-l="en">Move through rows</span><span data-l="pt">Andar pelas linhas</span></span></div>
+          <div><span><kbd>.</kbd></span><span><span data-l="en">Row actions</span><span data-l="pt">Ações da linha</span></span></div>
+          <div><span><kbd>Ctrl</kbd>+<kbd>T</kbd></span><span><span data-l="en">Show or hide the terminal</span><span data-l="pt">Mostrar ou ocultar o terminal</span></span></div>
+          <div><span><kbd>Ctrl</kbd>+<kbd>N</kbd></span><span><span data-l="en">Create from YAML</span><span data-l="pt">Criar a partir de YAML</span></span></div>
+          <div><span><kbd>Ctrl</kbd>+<kbd>R</kbd></span><span><span data-l="en">Refresh</span><span data-l="pt">Atualizar</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="wrap">
+        <p class="eyebrow">FAQ</p>
+        <h2><span data-l="en">Questions</span><span data-l="pt">Perguntas</span></h2>
+        <div class="faq">
+          <details>
+            <summary><span data-l="en">Does TKontrol install anything in my clusters?</span><span data-l="pt">O TKontrol instala alguma coisa nos meus clusters?</span></summary>
+            <p data-l="en">No. It talks to the API server with your kubeconfig. The scanners of Cluster Health, Security Center and Upgrade Advisor ship inside the installer and run on your machine.</p>
+            <p data-l="pt">Não. Ele fala com o API server usando o seu kubeconfig. Os scanners do Cluster Health, do Security Center e do Upgrade Advisor vêm no instalador e rodam na sua máquina.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Does it only work with AKS?</span><span data-l="pt">Só funciona com AKS?</span></summary>
+            <p data-l="en">It is built around AKS (Entra ID sign-in, Azure details, Windows node pools), but it connects to any cluster your kubeconfig reaches. The Azure-specific screens only apply to AKS.</p>
+            <p data-l="pt">Ele foi pensado para o AKS (login com Entra ID, Detalhes do Azure, node pools Windows), mas se conecta a qualquer cluster que o seu kubeconfig alcança. As telas específicas do Azure só valem para o AKS.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Can I try it without a cluster?</span><span data-l="pt">Dá para experimentar sem um cluster?</span></summary>
+            <p data-l="en">Yes. Choose <b>Explore Demo Mode</b> in the tray icon menu. It shows simulated data only, and the app returns to your clusters when you leave it.</p>
+            <p data-l="pt">Sim. Escolha <b>Explore Demo Mode</b> no menu do ícone da bandeja. Ele mostra só dados simulados, e o app volta aos seus clusters quando você sai.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Why does Windows warn me when I install it?</span><span data-l="pt">Por que o Windows avisa quando eu instalo?</span></summary>
+            <p data-l="en">The installers are not Authenticode-signed yet, so SmartScreen shows "Windows protected your PC". Check the file against <code>SHA256SUMS.txt</code>, then choose <b>More info → Run anyway</b>.</p>
+            <p data-l="pt">Os instaladores ainda não têm assinatura Authenticode, então o SmartScreen mostra "O Windows protegeu o computador". Confira o arquivo com o <code>SHA256SUMS.txt</code> e escolha <b>Mais informações → Executar assim mesmo</b>.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">How do updates work?</span><span data-l="pt">Como funcionam as atualizações?</span></summary>
+            <p data-l="en">About 20 seconds after opening, TKontrol downloads <code>latest.json</code> from GitHub and sends nothing about you or your machine. It always asks before installing. Turn it off in <b>Settings → Updates</b>, or for an organization with <code>TKONTROL_NO_UPDATE_CHECK=1</code>.</p>
+            <p data-l="pt">Cerca de 20 segundos depois de abrir, o TKontrol baixa o <code>latest.json</code> do GitHub e não envia nada sobre você ou a sua máquina. Ele sempre pergunta antes de instalar. Desligue em <b>Preferências → Atualizações</b>, ou para uma organização com <code>TKONTROL_NO_UPDATE_CHECK=1</code>.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Does it work behind a corporate proxy?</span><span data-l="pt">Funciona atrás de um proxy corporativo?</span></summary>
+            <p data-l="en">Yes. Set <code>HTTPS_PROXY</code> and <code>NO_PROXY</code> as Windows environment variables; a <code>proxy-url</code> in the kubeconfig is honored too. Calls to Azure and GitHub trust the Windows certificate store, where IT installs the corporate CA.</p>
+            <p data-l="pt">Sim. Defina <code>HTTPS_PROXY</code> e <code>NO_PROXY</code> nas variáveis de ambiente do Windows; o <code>proxy-url</code> do kubeconfig também é respeitado. As chamadas ao Azure e ao GitHub confiam no repositório de certificados do Windows, onde a TI instala a CA corporativa.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Is the source code available?</span><span data-l="pt">O código-fonte está disponível?</span></summary>
+            <p data-l="en">Not yet. The releases repository hosts the installers and the files the in-app updater reads. No license has been published yet; until then, all rights are reserved by the author. The bundled scanners keep their own licenses.</p>
+            <p data-l="pt">Ainda não. O repositório de releases guarda os instaladores e os arquivos que o atualizador do app lê. Nenhuma licença foi publicada ainda; até lá, todos os direitos são reservados ao autor. Os scanners empacotados mantêm as próprias licenças.</p>
+          </details>
+          <details>
+            <summary><span data-l="en">Where do I report a problem?</span><span data-l="pt">Onde relato um problema?</span></summary>
+            <p data-l="en">Open an <a href="https://github.com/tmzrocha/tkontrol-releases/issues">issue on GitHub</a> with the TKontrol version, what you did and what happened. Never attach a kubeconfig, tokens, <code>tkontrol.db</code> or <code>secret.key</code>.</p>
+            <p data-l="pt">Abra uma <a href="https://github.com/tmzrocha/tkontrol-releases/issues">issue no GitHub</a> com a versão do TKontrol, o que você fez e o que aconteceu. Nunca anexe kubeconfig, tokens, <code>tkontrol.db</code> ou <code>secret.key</code>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="alt closing">
+      <div class="wrap">
+        <h2><span data-l="en">Operate production with confidence</span><span data-l="pt">Opere a produção com confiança</span></h2>
+        <p class="lead"><span data-l="en">Free download for Windows. No account, no agent, no telemetry.</span><span data-l="pt">Download gratuito para Windows. Sem conta, sem agente, sem telemetria.</span></p>
+        <div class="cta">
+          <a class="btn btn-primary js-download" href="https://github.com/tmzrocha/tkontrol-releases/releases/latest">
+            <svg aria-hidden="true"><use href="#i-download"/></svg>
+            <span><span data-l="en">Download TKontrol</span><span data-l="pt">Baixar o TKontrol</span> <small class="js-version">v0.22.2</small></span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/tmzrocha/tkontrol-releases/releases">
+            <svg aria-hidden="true"><use href="#i-github"/></svg>
+            <span data-l="en">All releases</span><span data-l="pt">Todas as versões</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="row">
+        <a class="brand" href="#top">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0b5cad"/><path d="M9 9h14v3.2h-5.4V23h-3.2V12.2H9z" fill="#fff"/><circle cx="23" cy="21" r="2.6" fill="#38bdf8"/></svg>
+          TKontrol
+        </a>
+        <nav aria-label="Footer">
+          <a href="https://github.com/tmzrocha/tkontrol-releases/releases">Releases</a>
+          <a href="https://github.com/tmzrocha/tkontrol-releases/issues">Issues</a>
+          <a href="https://github.com/tmzrocha/tkontrol-releases#readme">README</a>
+        </nav>
+      </div>
+      <p data-l="en">Kubernetes is a registered trademark of The Linux Foundation. Azure, AKS and Windows are trademarks of Microsoft. TKontrol is not affiliated with or endorsed by either of them. Made by Tomaz Rocha.</p>
+      <p data-l="pt">Kubernetes é marca registrada da The Linux Foundation. Azure, AKS e Windows são marcas da Microsoft. O TKontrol não é afiliado a nenhuma delas nem endossado por elas. Feito por Tomaz Rocha.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var titles = {
+        en: "TKontrol: a Kubernetes desktop for AKS in production",
+        pt: "TKontrol: um desktop Kubernetes para AKS em produção"
+      };
+
+      // Alt texts: English in the markup, Portuguese in data-alt-pt.
+      var imgs = document.querySelectorAll("img[data-alt-pt]");
+      imgs.forEach(function (img) { img.setAttribute("data-alt-en", img.alt); });
+
+      function setLang(lang) {
+        root.setAttribute("data-lang", lang);
+        root.lang = lang === "pt" ? "pt-BR" : "en";
+        document.title = titles[lang];
+        imgs.forEach(function (img) { img.alt = img.getAttribute("data-alt-" + lang); });
+        document.querySelectorAll("[data-set-lang]").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-set-lang") === lang));
+        });
+      }
+      document.querySelectorAll("[data-set-lang]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var lang = b.getAttribute("data-set-lang");
+          try { localStorage.setItem("tk-site-lang", lang); } catch (e) { /* private mode */ }
+          setLang(lang);
+        });
+      });
+      setLang(root.getAttribute("data-lang") === "pt" ? "pt" : "en");
+
+      // Latest release: version and a direct link to the recommended installer.
+      // Without the API (offline, rate limit) the links keep pointing at releases/latest.
+      fetch("https://api.github.com/repos/tmzrocha/tkontrol-releases/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (rel) {
+          if (!rel || !rel.tag_name) return;
+          var version = rel.tag_name.replace(/^v/, "");
+          document.querySelectorAll(".js-version").forEach(function (el) { el.textContent = "v" + version; });
+          document.querySelectorAll(".js-ver").forEach(function (el) { el.textContent = version; });
+          var setup = (rel.assets || []).filter(function (a) { return /_x64-setup\.exe$/.test(a.name); })[0];
+          if (setup) document.querySelectorAll(".js-download").forEach(function (a) { a.href = setup.browser_download_url; });
+        })
+        .catch(function () { /* keep the fallback links */ });
+    })();
+  </script>
+
+</body>
+</html>
