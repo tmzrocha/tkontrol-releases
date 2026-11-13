@@ -35,7 +35,7 @@
       --primary: #0b5cad;
       --primary-hover: #094c8f;
       --on-primary: #ffffff;
-      --accent: #0284c7;
+      --accent: #0369a1;
       --chip: #e3edf9;
       --chip-text: #0b4a8b;
       --code-bg: #0f1b2d;
@@ -475,14 +475,14 @@
               <li><b>Cluster Health</b> with Popeye and Polaris.</li>
               <li><b>Security Center</b> with Trivy and KubeLinter.</li>
               <li><b>Upgrade Advisor</b> with Pluto and Kubeconform, plus Azure checks: quota, subnet capacity, maintenance windows and locks.</li>
-              <li><b>Resource Optimization</b>, read only: unused resources, node pool spare capacity and requests against observed usage.</li>
+              <li><b>Resource Optimization</b>, read only: resources that seem unused, node pool spare capacity and, when a Prometheus already runs in your cluster, requests and limits against observed usage.</li>
               <li>The scanners ship inside the installer, run on your machine and install nothing in your clusters.</li>
             </ul>
             <ul data-l="pt">
               <li><b>Cluster Health</b> com Popeye e Polaris.</li>
               <li><b>Security Center</b> com Trivy e KubeLinter.</li>
               <li><b>Upgrade Advisor</b> com Pluto e Kubeconform, mais verificações do Azure: cota, capacidade das subnets, janelas de manutenção e locks.</li>
-              <li><b>Resource Optimization</b>, só leitura: recursos sem uso, folga dos node pools e requests contra o uso observado.</li>
+              <li><b>Resource Optimization</b>, só leitura: recursos que parecem sem uso, folga dos node pools e, quando já existe um Prometheus no cluster, requests e limits contra o uso observado.</li>
               <li>Os scanners vêm no instalador, rodam na sua máquina e não instalam nada nos clusters.</li>
             </ul>
           </article>
@@ -581,7 +581,7 @@
             <li data-l="en">Run it. The installers are not Authenticode-signed yet, so SmartScreen may say "Windows protected your PC": choose <b>More info → Run anyway</b>.</li>
             <li data-l="pt">Execute. Os instaladores ainda não têm assinatura Authenticode, então o SmartScreen pode dizer "O Windows protegeu o computador": escolha <b>Mais informações → Executar assim mesmo</b>.</li>
             <li data-l="en">Open TKontrol. To look around without a cluster, choose <b>Explore Demo Mode</b> in the tray icon menu.</li>
-            <li data-l="pt">Abra o TKontrol. Para conhecer sem um cluster, escolha <b>Explore Demo Mode</b> no menu do ícone da bandeja.</li>
+            <li data-l="pt">Abra o TKontrol. Para conhecer sem um cluster, escolha <b>Explorar o Modo Demo</b> no menu do ícone da bandeja.</li>
             <li data-l="en">On the <b>Clusters</b> page, choose <b>Import kubeconfig</b>: pick contexts from <code>~/.kube/config</code>, paste a kubeconfig or import the AKS clusters of your subscription.</li>
             <li data-l="pt">Na tela <b>Clusters</b>, escolha <b>Importar kubeconfig</b>: escolha contextos do <code>~/.kube/config</code>, cole um kubeconfig ou importe os clusters AKS da sua assinatura.</li>
           </ol>
@@ -655,13 +655,13 @@ Get-FileHash .\TKontrol_<span class="js-ver">&lt;version&gt;</span>_x64-setup.ex
           </details>
           <details>
             <summary><span data-l="en">Does it only work with AKS?</span><span data-l="pt">Só funciona com AKS?</span></summary>
-            <p data-l="en">It is built around AKS (Entra ID sign-in, Azure details, Windows node pools), but it connects to any cluster your kubeconfig reaches. The Azure-specific screens only apply to AKS.</p>
-            <p data-l="pt">Ele foi pensado para o AKS (login com Entra ID, Detalhes do Azure, node pools Windows), mas se conecta a qualquer cluster que o seu kubeconfig alcança. As telas específicas do Azure só valem para o AKS.</p>
+            <p data-l="en">It is a desktop for Kubernetes clusters, built around AKS (Entra ID sign-in, Azure details, Windows node pools). It talks to your clusters with your own kubeconfig; the Azure-specific screens only apply to AKS.</p>
+            <p data-l="pt">É um desktop para clusters Kubernetes, pensado para o AKS (login com Entra ID, Detalhes do Azure, node pools Windows). Ele acessa os clusters com o seu próprio kubeconfig; as telas específicas do Azure só valem para o AKS.</p>
           </details>
           <details>
             <summary><span data-l="en">Can I try it without a cluster?</span><span data-l="pt">Dá para experimentar sem um cluster?</span></summary>
             <p data-l="en">Yes. Choose <b>Explore Demo Mode</b> in the tray icon menu. It shows simulated data only, and the app returns to your clusters when you leave it.</p>
-            <p data-l="pt">Sim. Escolha <b>Explore Demo Mode</b> no menu do ícone da bandeja. Ele mostra só dados simulados, e o app volta aos seus clusters quando você sai.</p>
+            <p data-l="pt">Sim. Escolha <b>Explorar o Modo Demo</b> no menu do ícone da bandeja. Ele mostra só dados simulados, e o app volta aos seus clusters quando você sai.</p>
           </details>
           <details>
             <summary><span data-l="en">Why does Windows warn me when I install it?</span><span data-l="pt">Por que o Windows avisa quando eu instalo?</span></summary>
@@ -696,7 +696,7 @@ Get-FileHash .\TKontrol_<span class="js-ver">&lt;version&gt;</span>_x64-setup.ex
     <section class="alt closing">
       <div class="wrap">
         <h2><span data-l="en">Operate production with confidence</span><span data-l="pt">Opere a produção com confiança</span></h2>
-        <p class="lead"><span data-l="en">Free download for Windows. No account, no agent, no telemetry.</span><span data-l="pt">Download gratuito para Windows. Sem conta, sem agente, sem telemetria.</span></p>
+        <p class="lead"><span data-l="en">Download for Windows. No agent in your clusters, no telemetry.</span><span data-l="pt">Download para Windows. Sem agente nos clusters, sem telemetria.</span></p>
         <div class="cta">
           <a class="btn btn-primary js-download" href="https://github.com/tmzrocha/tkontrol-releases/releases/latest">
             <svg aria-hidden="true"><use href="#i-download"/></svg>
